@@ -2,7 +2,7 @@
 
 This repository shows that Conjecture 4.27 of
 
-> L. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
+> A. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
 > Advances in Mathematics 461 (2025) 110079, [arXiv:2402.17839](https://arxiv.org/abs/2402.17839)
 
 is false for `4 × 4` matrices and for `5 × 5` matrices. The proof is short and elementary, and it
