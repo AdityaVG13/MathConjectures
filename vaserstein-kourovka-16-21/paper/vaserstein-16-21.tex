@@ -1,0 +1,655 @@
+\documentclass[11pt]{amsart}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage[margin=1.2in]{geometry}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem*{theoremA}{Theorem A}
+\newtheorem*{theoremB}{Theorem B}
+\newtheorem{mainthm}{Theorem}
+\renewcommand{\themainthm}{\arabic{mainthm}}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{question}[theorem]{Question}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\F}{\mathbb{F}_2}
+\newcommand{\GL}{\mathrm{GL}}
+\newcommand{\SL}{\mathrm{SL}}
+\newcommand{\rk}{\operatorname{rank}}
+\newcommand{\Span}{\operatorname{span}}
+\newcommand{\cn}{\operatorname{cn}}
+
+\title{Kourovka Problem 16.21 over the field with two elements}
+\author{AdityaVG13}
+\date{}
+
+\begin{document}
+
+\begin{abstract}
+L.~Vaserstein asked (Kourovka Notebook, Problem 16.21) whether, for $n>2$ and a non-central
+matrix $\alpha\in\SL_n(F)$, every non-central matrix in $\SL_n(F)$ is a product of $n$ matrices,
+each similar to $\alpha$. We answer the question affirmatively for $F=\F$, and show that $n$ may
+be replaced by any $k\ge n$. The proof assumes two published theorems, of Kn\"uppel and Nielsen
+and of B\"unger and Nielsen. It is an induction on $n$ that sorts matrices by one property:
+whether they fix a vector together with a complementary hyperplane. Matrices that do reduce to
+dimensions $n-1$ and $n-2$ through an explicit construction. Matrices that do not have minimum
+rank at least $3$, and for them the two cited theorems give a product of at most
+$2\lceil(n-1)/3\rceil+1$ conjugates, about $2n/3$. The number $n$ is needed only because of
+matrices close to the identity, such as transvections. We give the exact number of conjugates
+needed for every conjugacy class of $\GL_3(\F)$ and $\GL_4(\F)$. Everything except the two cited
+theorems is formalized in Lean~4 with Mathlib. The work was produced almost entirely by an AI agent
+under the author's direction, as a test of a new computational mathematics project, and we
+describe how.
+\end{abstract}
+
+\maketitle
+
+\section{Introduction}
+
+\subsection{The question}
+Problem 16.21 of the Kourovka Notebook \cite{Kourovka}, posed by L.~Vaserstein, reads:
+
+\begin{quote}
+Given a non-central matrix $\alpha\in\SL_n(F)$ over a field $F$ for $n>2$, is it true that every
+non-central matrix in $\SL_n(F)$ is a product of $n$ matrices, each similar to $\alpha$?
+\end{quote}
+
+The 21st edition of the Notebook (2026) lists the problem as open.
+
+The question belongs to a long line of work on products of conjugacy classes in groups; see the
+volume of Arad and Herzog \cite{AH} for the classical theory. For a conjugacy class $C$ of a group
+$G$, write $C^k$ for the set of products of $k$ elements of $C$. A typical question asks how large
+$k$ must be for $C^k$ to contain all of $G$, or all elements outside the centre. For linear groups
+this is a question about matrices: given one matrix $\alpha$, how many matrices similar to $\alpha$
+does it take to write an arbitrary matrix as their product?
+
+The number $n$ in Vaserstein's question is natural. If $\alpha$ is a transvection, every matrix
+$c$ similar to $\alpha$ has $\rk(c-1)=1$. From $xy-1=x(y-1)+(x-1)$ we get
+$\rk(xy-1)\le\rk(x-1)+\rk(y-1)$, so a product of $k$ transvections $g$ has $\rk(g-1)\le k$. A
+matrix $g$ with $g-1$ invertible therefore needs at least $n$ transvections. So $n$ cannot be
+lowered in general, and the question asks whether it is always enough.
+
+\subsection{What was known}
+For fields with at least four elements, Lev \cite{Lev} showed that a product of two prescribed
+cyclic similarity classes of $\GL_n(F)$ contains every nonscalar matrix of the right determinant,
+under a condition on eigenvalues. Kn\"uppel \cite{Knuppel} studied the least $k$ such that every
+element of $\SL(V)$ is a product of at most $k$ elements of a given class. Kn\"uppel and Nielsen
+\cite{KN} determined the \emph{extended covering number} of $\SL_n(K)$, the least $k$ such that
+$1\in C_1\cdots C_k$ for all non-central classes $C_1,\dots,C_k$; it equals $n+1$ ``provided $n$
+and the field are not too small''. The field $\F$ is the smallest field, and parts of their
+argument do not apply to it.
+
+We do not know whether these results settle Problem 16.21 for any field, and we make no claim
+about fields other than $\F$.
+
+\subsection{Results}
+Over $\F$ every invertible matrix has determinant $1$, so $\SL_n(\F)=\GL_n(\F)$, the centre is
+trivial, and a matrix similar to $\alpha$ is the same as a conjugate of $\alpha$ in $\GL_n(\F)$.
+The question becomes: is every nonidentity element of $\GL_n(\F)$ a product of $n$ conjugates of
+any given nonidentity element?
+
+\begin{mainthm}\label{thm:main}
+Assume Theorems A and B below. Let $n\ge3$, let $\alpha,g\in\GL_n(\F)$ with $\alpha\ne1$ and
+$g\ne1$, and let $k\ge n$. Then $g$ is a product of $k$ conjugates of $\alpha$. In particular,
+Problem 16.21 has a positive answer for $F=\F$.
+\end{mainthm}
+
+The proof shows more for matrices that are far from the identity. Say that $h\in\GL(V)$ has a
+\emph{J1 block} if it fixes a vector $v$ and a linear form $\varphi$ with $\varphi(v)=1$; then $h$
+is the direct sum of the identity on $\langle v\rangle$ and a map on the hyperplane $\ker\varphi$.
+In terms of the Jordan form, $h$ has a Jordan block of size $1$ for the eigenvalue $1$.
+
+\begin{mainthm}\label{thm:far}
+Assume Theorems A and B. Let $n\ge5$ and let $\alpha\in\GL_n(\F)$, $\alpha\ne1$, have no J1 block.
+Then every nonidentity element of $\GL_n(\F)$ is a product of $k$ conjugates of $\alpha$ for every
+$k\ge 2\lceil(n-1)/3\rceil+1$.
+\end{mainthm}
+
+So for most matrices about $2n/3$ conjugates suffice, and $n$ is forced only by matrices that
+split off an identity block. For $n=3$ and $n=4$ we computed the exact numbers
+(Section~\ref{sec:small}, Table~\ref{tab:cn}). Most classes need only $2$ conjugates, and the
+classes that need $n$ are the transvections and, for $n=4$, one class of elements of order~$3$.
+
+\subsection{The cited theorems}
+A matrix $A\in K^{n\times n}$ is \emph{cyclic} if there is a vector $v$ such that
+$v,Av,\dots,A^{n-1}v$ is a basis of $K^n$. The \emph{minimum rank} of $A$ is
+$\delta(A)=\min_{\lambda\in\overline K}\rk(A-\lambda)$, where $\overline K$ is an algebraic
+closure of $K$. Kn\"uppel and Nielsen define $\delta(A)$ as $n$ minus the number of invariant
+divisors of $A$ different from $1$, and note in the proof of their Lemma~5.1 that the two
+definitions agree. Both notions depend only on the similarity class.
+
+\begin{theoremA}[{Kn\"uppel and Nielsen \cite[Corollary 6.9]{KN}, case $K=\F$}]
+Let $n\ge3$, $n\ne4$, and let $C_1,\dots,C_m$ be non-central conjugacy classes of $\SL_n(\F)$ with
+$\delta(C_1)+\dots+\delta(C_m)\ge n-1$. Then $C_1C_2\cdots C_m$ contains a cyclic matrix.
+\end{theoremA}
+
+\begin{theoremB}[{B\"unger and Nielsen \cite[Theorem 1.2]{BN}, case $K=\F$}]
+Let $n\ge3$, let $M\in\GL_n(\F)$ be a matrix that is not a homothety, let $X$ be a cyclic
+similarity class of $\GL_n(\F)$, and let $q\in\F[x]$ be monic of degree $n-1$ with $q(0)\ne0$.
+Then there is a similarity class $D$ of $\GL_n(\F)$ whose minimal polynomial is divisible by $q$
+and such that $M\in DX$.
+\end{theoremB}
+
+We do not prove these two theorems. Every other step is elementary, and every other step is
+checked in Lean~4 \cite{Lean4} with Mathlib \cite{Mathlib}: the formal main theorem takes
+Theorems A and B as hypotheses and depends on no other assumptions (Section~\ref{sec:lean}).
+
+\subsection{How the result was found}
+This work was produced almost entirely by an AI agent (Droid, by Factory), working under the
+author's direction. The author is developing a new computational mathematics project, a
+programming language for exact mathematical computation in which one writes definitions as on
+paper and states expected facts as checks that the program evaluates, and this problem was taken
+up to test that project on open problems. The agent carried out the computations, found the
+argument, searched the literature, wrote the Lean formalization and drafted this text. The author
+chose the problem, set the scope (in particular, to cite Theorems A and B rather than formalize
+them) and takes responsibility for the paper. No specialist has refereed the argument; the main
+evidence for its correctness is the Lean check of every step outside Theorems A and B.
+
+The path to the proof went as follows.
+
+\emph{Small cases.} An exhaustive computation in $\GL_3(\F)$ and $\GL_4(\F)$ confirmed the answer
+for $n=3,4$ and produced the data of Table~\ref{tab:cn}. Random searches for explicit products
+found witnesses for every pair of classes for $n=5$ and $n=6$. This suggested that the answer is
+yes and that most classes have a lot of room to spare.
+
+\emph{Matrices with a J1 block.} If $\alpha=1\oplus\alpha'$, induction handles every target $g$
+that also has a J1 block. The data suggested that, for every other target, one conjugate $c$ of
+$\alpha$ can be chosen so that $gc^{-1}$ has a J1 block; this became Lemma~\ref{lem:P}. Testing a
+construction of $c$ on every pair of classes for $n=4,5,6$ succeeded outside one situation:
+$\alpha$ an involution and $g$ satisfying $g^2+g+1=0$. In $\GL_4(\F)$, none of the $315$ involutions works for
+such $g$. Remark~\ref{rem:sharpP} explains why, and Lemma~\ref{lem:exception} handles this case
+directly.
+
+\emph{Matrices without a J1 block.} Here the reduction does not apply, and several attempts at a
+direct argument stalled. A literature search found Theorems A and B, which together turn
+``$\alpha$ has large minimum rank'' into ``every $g$ is a short product of conjugates''. What
+remained was to show that matrices without a J1 block have minimum rank at least $3$
+(Lemma~\ref{lem:minrank}).
+
+\emph{Formalization.} The first complete argument split the classes by minimum rank and used a
+third published result for transvections. Writing the proof in Lean led to the simpler split used
+here, by whether $\alpha$ has a J1 block, and the third result was no longer needed.
+
+\subsection{Organization}
+Section~\ref{sec:overview} explains the idea of the proof. Section~\ref{sec:prelim} collects
+preliminaries, and Section~\ref{sec:small} treats $n=3,4$ and gives the exact data.
+Sections~\ref{sec:J1} and~\ref{sec:noJ1} treat matrices with and without a J1 block, and
+Section~\ref{sec:proof} completes the proofs. Section~\ref{sec:lean} describes the formalization
+and Section~\ref{sec:discussion} lists open questions.
+
+\section{The idea of the proof}\label{sec:overview}
+
+Fix $\alpha\ne1$ and write $C$ for its class. Two simple facts organize everything.
+
+First, adding factors never hurts: once every nonidentity element lies in $C^m$, the same holds
+for $C^k$ with $k\ge m$ (Lemma~\ref{lem:more}). So it is enough to reach some $m\le n$.
+
+Second, matrices come in two kinds. A matrix with a J1 block is ``the identity plus something
+smaller''. A matrix without one is spread out: no eigenvalue can have a large eigenspace.
+
+\emph{If $\alpha$ has a J1 block}, write $\alpha=1\oplus\alpha'$. A target of the same shape,
+$g=1\oplus g'$, is handled in dimension $n-1$ by induction. For any other target $g$, we choose one
+conjugate $c$ of $\alpha$ so that $gc^{-1}$ has a J1 block. Then $gc^{-1}$ is a product of $n-1$
+conjugates by the previous case, and $g=(gc^{-1})c$ is a product of $n$. Finding $c$ is a matter of
+lining up two pairs of vectors and linear forms, one adapted to $g$ and one to $\alpha$. This works
+unless $\alpha$ is an involution and $g$ is a sum of rotations of order $3$, and that case is done
+by hand, using dimension $n-2$.
+
+\emph{If $\alpha$ has no J1 block}, its minimum rank is at least $3$. Theorem~A then says that a
+product of about $(n-1)/3$ conjugates of $\alpha$ is a cyclic matrix $D$. Theorem~B says that
+every non-homothety factors as (a matrix of a special class $N$) times (a conjugate of $D$). The
+class $N$ is the same whatever matrix is factored, and applying Theorem~B to $\alpha$ itself shows
+that $N\subseteq C\cdot C^{k}$. So every $g$ lies in $N\cdot C^k\subseteq C^{2k+1}$, and
+$2k+1\le n$.
+
+The base cases $n=3$ and $n=4$ are done by computer, because the induction needs dimensions $n-1$
+and $n-2$ and Theorem~A excludes $n=4$.
+
+\section{Preliminaries}\label{sec:prelim}
+
+Throughout, $V$ is a vector space of dimension $n$ over $\F$, $V^*$ is its dual and
+$G=\GL(V)$. For $a\in G$ let $C_a$ be its conjugacy class and let $C_a^k$ be the set of products
+of $k$ elements of $C_a$. The set $C_a^k$ is closed under conjugation and depends only on $C_a$.
+For $n\ge2$ the centre of $G$ is trivial, so every $a\ne1$ is non-central.
+
+For $n\ge 1$ let $P(n)$ be the statement: for every space $V$ of dimension $n$ and all
+$a,g\in\GL(V)\setminus\{1\}$, we have $g\in C_a^k$ for every $k\ge n$.
+
+\begin{lemma}\label{lem:more}
+Let $a\in G$ be non-central and suppose $G\setminus\{1\}\subseteq C_a^m$. Then
+$G\setminus\{1\}\subseteq C_a^k$ for every $k\ge m$.
+\end{lemma}
+
+\begin{proof}
+Let $k=m+j$ with $j\ge1$ and $g\ne1$. The set $C_a^j$ contains $a^j$ and $(xax^{-1})a^{j-1}$, where
+$xax^{-1}\ne a$, and these differ. So some $u\in C_a^j$ satisfies $u\ne g$. Then $u^{-1}g\ne1$
+lies in $C_a^m$, and $g=u\cdot u^{-1}g\in C_a^{j+m}$.
+\end{proof}
+
+Over $\F$, vectors $x_1,\dots,x_m$ are linearly independent if and only if no nonempty subset of
+them sums to $0$. A vector space over any field is not the union of two proper subspaces. If
+$x_1,\dots,x_m\in V$ are linearly independent, there is $\varphi\in V^*$ with any prescribed values
+$\varphi(x_i)$.
+
+\begin{definition}
+An element $h\in G$ has a \emph{J1 block} if there are $v\in V$ and $\varphi\in V^*$ with
+$\varphi(v)=1$, $hv=v$ and $\varphi\circ h=\varphi$.
+\end{definition}
+
+If $h$ has a J1 block then $V=\langle v\rangle\oplus\ker\varphi$, both summands are
+$h$-invariant, and $h=1\oplus h'$ with $h'\in\GL(\ker\varphi)$. Having a J1 block is invariant
+under conjugation. With $T=h-1$, a J1 block exists exactly when $\ker T\not\subseteq\operatorname{im}T$,
+that is, when $n-2\rk T+\rk T^2>0$.
+
+A \emph{frame} of size $m$ is a pair of families $e_1,\dots,e_m\in V$ and
+$f_1,\dots,f_m\in V^*$ with $f_i(e_j)=\delta_{ij}$. Then
+$V=\Span(e_1,\dots,e_m)\oplus\bigcap_i\ker f_i$.
+
+\begin{lemma}\label{lem:frame}
+Given two frames $(e,f)$ and $(e',f')$ of the same size $m$, there is $t\in G$ with $te'_j=e_j$
+and $f_i\circ t=f'_i$ for all $i,j$.
+\end{lemma}
+
+\begin{proof}
+Both kernels $\bigcap_i\ker f_i$ and $\bigcap_i\ker f'_i$ have dimension $n-m$. Let $t$ send
+$e'_j$ to $e_j$ and map the second kernel isomorphically onto the first. For
+$x=\sum_j f'_j(x)e'_j+y$ with $y$ in the second kernel, $tx=\sum_j f'_j(x)e_j+ty$, so
+$f_i(tx)=f'_i(x)$.
+\end{proof}
+
+We also use the standard fact that if $a=a_1\oplus a_2$ along $V=A\oplus B$ and
+$b=b_1\oplus b_2$ along $V=A'\oplus B'$, where $a_1$ is conjugate to $b_1$ by an isomorphism
+$A\to A'$ and $a_2$ to $b_2$ by an isomorphism $B\to B'$, then $a$ and $b$ are conjugate in $G$.
+Products of conjugates in $\GL(A)\times\GL(B)$ can be formed in each factor separately.
+
+\section{The cases \texorpdfstring{$n=3$}{n=3} and \texorpdfstring{$n=4$}{n=4}}\label{sec:small}
+
+The group $\GL_3(\F)$ has order $168$ and $6$ conjugacy classes, and $\GL_4(\F)$, which is
+isomorphic to the alternating group $A_8$, has order $20160$ and $14$ conjugacy classes.
+
+\emph{The proof.} We fix one representative of each class. A certificate consists of, for each
+invertible matrix, a matrix conjugating it to its representative, and, for each ordered pair
+$(a,b)$ of nonidentity representatives, $n$ explicit conjugates of $a$ whose product is $b$. The
+certificates were found by a computer search. Lean checks them by evaluation in its kernel; the
+search itself is not part of the proof. This shows that every nonidentity element is a product of
+$n$ conjugates of every nonidentity element, and Lemma~\ref{lem:more} gives $P(3)$ and $P(4)$.
+
+\emph{The exact numbers.} For $\alpha\ne1$ let $\cn(\alpha)$ be the least $m$ such that every
+nonidentity element lies in $C_\alpha^m$. By Lemma~\ref{lem:more}, every nonidentity element then
+lies in $C_\alpha^k$ for all $k\ge\cn(\alpha)$. Theorem~\ref{thm:main} says $\cn(\alpha)\le n$.
+Table~\ref{tab:cn} lists $\cn(\alpha)$ for every class of $\GL_3(\F)$ and $\GL_4(\F)$. It was
+computed exhaustively by a separate program, working with whole classes: since $C_\alpha^k$ is a
+union of classes, $C_\alpha^{k+1}$ is found by multiplying one representative of each class in
+$C_\alpha^k$ by every element of $C_\alpha$. This computation is not formalized, but it agrees
+with the Lean-checked bound $\cn(\alpha)\le n$.
+
+In the table, $J_k$ is the unipotent Jordan block of size $k$, $\omega$ is the companion matrix of
+$x^2+x+1$, and $C(p)$ is the companion matrix of $p$.
+
+\begin{table}[ht]
+\centering
+\small
+\begin{tabular}{lrrccc}
+\toprule
+class of $\alpha$ & order & size & J1 block & $\delta(\alpha)$ & $\cn(\alpha)$\\
+\midrule
+\multicolumn{6}{l}{$\GL_3(\F)$}\\
+$J_2\oplus1$ (transvection) & 2 & 21 & yes & 1 & 3\\
+$\omega\oplus1$ & 3 & 56 & yes & 2 & 2\\
+$J_3$ & 4 & 42 & no & 2 & 2\\
+$C(x^3+x+1)$ & 7 & 24 & no & 2 & 3\\
+$C(x^3+x^2+1)$ & 7 & 24 & no & 2 & 3\\
+\midrule
+\multicolumn{6}{l}{$\GL_4(\F)$}\\
+$J_2\oplus1\oplus1$ (transvection) & 2 & 105 & yes & 1 & 4\\
+$J_2\oplus J_2$ & 2 & 210 & no & 2 & 3\\
+$\omega\oplus1\oplus1$ & 3 & 1120 & yes & 2 & 2\\
+$\omega\oplus\omega$ & 3 & 112 & no & 2 & 4\\
+$J_3\oplus1$ & 4 & 1260 & yes & 2 & 2\\
+$J_4$ & 4 & 2520 & no & 3 & 2\\
+$C(x^4+x^3+x^2+x+1)$ & 5 & 1344 & no & 3 & 3\\
+$J_2\oplus\omega$ & 6 & 3360 & no & 3 & 2\\
+$C\big((x^2+x+1)^2\big)$ & 6 & 1680 & no & 3 & 2\\
+$C(x^3+x+1)\oplus1$ & 7 & 2880 & yes & 3 & 2\\
+$C(x^3+x^2+1)\oplus1$ & 7 & 2880 & yes & 3 & 2\\
+$C(x^4+x+1)$ & 15 & 1344 & no & 3 & 2\\
+$C(x^4+x^3+1)$ & 15 & 1344 & no & 3 & 2\\
+\bottomrule
+\end{tabular}
+\medskip
+\caption{The least $m$ such that every nonidentity element is a product of $m$ conjugates of
+$\alpha$, for every nonidentity class of $\GL_3(\F)$ and $\GL_4(\F)$.}
+\label{tab:cn}
+\end{table}
+
+Three features of the table are worth noting.
+\begin{itemize}
+\item The bound $n$ is attained by the transvections, as the rank argument of the introduction
+predicts, and in $\GL_4(\F)$ also by $\omega\oplus\omega$. This is the fixed-point-free element of
+order $3$, the same kind of matrix ($g^2+g+1=0$) that is the exceptional target in
+Lemma~\ref{lem:P}.
+\item Most classes need only $2$ conjugates, far below $n$.
+\item In $\GL_4(\F)$ the classes $J_2\oplus J_2$ and $\omega\oplus\omega$ have no J1 block but
+minimum rank $2$. So Lemma~\ref{lem:minrank} below fails for $n=4$, and its hypothesis $n\ge5$
+is needed.
+\end{itemize}
+
+\section{Matrices with a J1 block}\label{sec:J1}
+
+In this section $n\ge5$, and we assume $P(n-1)$ and $P(n-2)$.
+
+\begin{lemma}\label{lem:J1target}
+If $\alpha\ne1$ and $h\ne1$ both have a J1 block, then $h\in C_\alpha^k$ for every $k\ge n-1$.
+\end{lemma}
+
+\begin{proof}
+Write $\alpha=1\oplus\alpha'$ and $h=1\oplus h'$ along splittings $\langle v\rangle\oplus U$ and
+$\langle w\rangle\oplus U'$. Then $\alpha'\ne1$ and $h'\ne1$. After conjugating $\alpha$ we may
+assume the two splittings coincide. By $P(n-1)$, $h'$ is a product of $k$ conjugates of $\alpha'$
+in $\GL(U')$, and adding the identity on the first summand gives $h\in C_\alpha^k$.
+\end{proof}
+
+\begin{lemma}[Lemma P]\label{lem:P}
+Let $\alpha\ne1$ have a J1 block and let $g\ne1$. If $\alpha^2=1$, assume also
+$g^2+g+1\ne0$. Then there is $c\in C_\alpha$ such that $gc^{-1}$ has a J1 block.
+\end{lemma}
+
+\begin{proof}
+\emph{Step 1.} Suppose $v,w\in V$ and $\varphi,\varphi'\in V^*$ satisfy, with
+$a=\varphi(g^{-1}v)$,
+\begin{equation}\label{eq:P}
+\varphi(v)=1,\quad \varphi(gv)=0,\quad \varphi'(w)=a,\quad \varphi'(\alpha w)=1,\quad
+\varphi'(\alpha^2w)=0.
+\end{equation}
+Then the vectors $g^{-1}v,\,v$ with the covectors $\varphi\circ g,\ \varphi-a\,\varphi\circ g$ form a
+frame, and so do $w,\,\alpha w$ with $\varphi'\circ\alpha,\ \varphi'-a\,\varphi'\circ\alpha$. Let $t$
+be given by Lemma~\ref{lem:frame}, so that $tw=g^{-1}v$, $t\alpha w=v$,
+$\varphi\circ g\circ t=\varphi'\circ\alpha$ and
+$(\varphi-a\,\varphi\circ g)\circ t=\varphi'-a\,\varphi'\circ\alpha$. The last two give
+$\varphi\circ t=\varphi'$. Put $c=t\alpha t^{-1}$ and $h=gc^{-1}=gt\alpha^{-1}t^{-1}$. Then
+\[
+hv=gt\alpha^{-1}(\alpha w)=gtw=v,\qquad
+\varphi(hx)=(\varphi\circ g\circ t)(\alpha^{-1}t^{-1}x)=\varphi'(t^{-1}x)=\varphi(x),
+\]
+so $h$ has the J1 block $(v,\varphi)$.
+
+\emph{Step 2: $\alpha^2\ne1$.} Pick $v$ with $gv\ne v$. Then $v$ and $gv$ are linearly independent,
+so there is $\varphi$ with $\varphi(v)=1$ and $\varphi(gv)=0$. Let $(u,\psi)$ be a J1 block of
+$\alpha$. Then $(\alpha^2+\alpha+1)u=3u=u\ne0$, so both $\ker(\alpha^2+\alpha+1)$ and
+$\ker(\alpha^2-1)$ are proper subspaces, and some $w$ lies in neither. The vectors
+$w,\alpha w,\alpha^2w$ are linearly independent: none is $0$, they are pairwise distinct because
+$\alpha^2w\ne w$, and their sum is not $0$. So there is $\varphi'$ with the values required
+in~\eqref{eq:P}.
+
+\emph{Step 3: $\alpha^2=1$ and $g^2+g+1\ne0$.} Since $g\ne1$, the subspaces $\ker(g-1)$ and
+$\ker(g^2+g+1)$ are proper, so some $v$ lies in neither. Then $v\notin\Span(gv,g^{-1}v)$: indeed
+$v\ne0$, $v\ne gv$, $v\ne g^{-1}v$, and $v\ne gv+g^{-1}v$ because applying $g$ would give
+$(g^2+g+1)v=0$. Choose $\varphi$ with $\varphi(v)=1$ and $\varphi(gv)=\varphi(g^{-1}v)=0$, so
+$a=0$. Pick $w$ with $\alpha w\ne w$ and $\varphi'$ with $\varphi'(w)=0$ and
+$\varphi'(\alpha w)=1$. Then $\varphi'(\alpha^2w)=\varphi'(w)=0$, and~\eqref{eq:P} holds.
+\end{proof}
+
+\begin{remark}\label{rem:sharpP}
+The extra hypothesis in Lemma~\ref{lem:P} cannot be dropped. Let $\alpha^2=1$ and
+$g^2+g+1=0$, and suppose $c\in C_\alpha$ and $h=gc^{-1}$ has a J1 block $(v,\varphi)$. Since
+$c=c^{-1}$, the equation $hv=v$ gives $cv=g^{-1}v$, and $\varphi\circ h=\varphi$ gives
+$\varphi\circ g=\varphi\circ c$. Evaluating at $v$ gives $\varphi(gv)=\varphi(g^{-1}v)$. But
+$g(g+1)=g^2+g=1$, so $g^{-1}=g+1$ and $\varphi(g^{-1}v)=\varphi(gv)+\varphi(v)=\varphi(gv)+1$, a
+contradiction.
+\end{remark}
+
+The case excluded in Lemma~\ref{lem:P} is handled directly. In $\GL_2(\F)$, let $\sigma$ be the
+swap of the two coordinates and $\omega=\left(\begin{smallmatrix}0&1\\1&1\end{smallmatrix}\right)$,
+of order $3$. Then $\omega=\sigma\cdot(\omega\sigma\omega^{-1})$ is a product of two conjugates of
+$\sigma$, and since $\sigma^2=1$ it is a product of $2j$ conjugates of $\sigma$ for every $j\ge1$.
+
+\begin{lemma}\label{lem:exception}
+Let $\alpha\ne1$ with $\alpha^2=1$, and let $g$ satisfy $g^2+g+1=0$. Then $n$ is even and
+$g\in C_\alpha^n$.
+\end{lemma}
+
+\begin{proof}
+For $v\ne0$ we have $gv\ne v$, since otherwise $v=3v=(g^2+g+1)v=0$. Choose $\psi$ with
+$\psi(v)=1$ and $\psi(gv)=0$. Using $g^2=g+1$, the pairs $v,gv$ and $\psi,\psi\circ g$ form a
+frame, and both $\Span(v,gv)$ and $\ker\psi\cap\ker(\psi\circ g)$ are $g$-invariant. In the basis
+$v,gv$ the map $g$ acts as $\omega$, so $g=\omega\oplus g'$, where $g'$ again satisfies
+$g'^2+g'+1=0$. By induction $n$ is even. In the same way, for $u$ with $\alpha u\ne u$, the plane
+$\Span(u,\alpha u)$ and a complement are $\alpha$-invariant and $\alpha=\sigma\oplus\alpha'$.
+After conjugating $\alpha$, both decompositions use the same splitting $V=P\oplus U$ with
+$\dim U=n-2\ge3$. The map $g'$ is not the identity.
+
+If $\alpha'\ne1$, then $g'\in C_{\alpha'}^n$ by $P(n-2)$ and $\omega\in C_\sigma^n$ because $n$ is
+even, so $g=\omega\oplus g'\in C_\alpha^n$.
+
+If $\alpha'=1$, write $g=(\omega\oplus1)(1\oplus g')$. The first factor lies in $C_\alpha^2$.
+Split $U=P'\oplus U'$ with $g'=\omega\oplus g''$ as above and let $\tau=\sigma\oplus1$ on $U$.
+Then $\tau\ne1$, so $P(n-2)$ gives $g'\in C_\tau^{n-2}$. The map $1_P\oplus\tau$ is conjugate to
+$\alpha$, since both act as $\sigma$ on a plane and as the identity on a complement. Hence
+$1\oplus g'\in C_\alpha^{n-2}$ and $g\in C_\alpha^n$.
+\end{proof}
+
+\begin{proposition}\label{prop:J1}
+Let $n\ge5$ and assume $P(n-1)$ and $P(n-2)$. If $\alpha\ne1$ has a J1 block, then every
+$g\ne1$ lies in $C_\alpha^n$.
+\end{proposition}
+
+\begin{proof}
+If $g$ has a J1 block, use Lemma~\ref{lem:J1target}. If $\alpha^2=1$ and $g^2+g+1=0$, use
+Lemma~\ref{lem:exception}. Otherwise Lemma~\ref{lem:P} gives $c\in C_\alpha$ such that $h=gc^{-1}$
+has a J1 block. Then $h\ne1$, since otherwise $g=c$ would have a J1 block. By
+Lemma~\ref{lem:J1target}, $h\in C_\alpha^{n-1}$, and $g=hc\in C_\alpha^n$.
+\end{proof}
+
+\section{Matrices without a J1 block}\label{sec:noJ1}
+
+\begin{lemma}\label{lem:minrank}
+Let $n\ge5$ and let $\alpha\in\GL_n(\F)$ have no J1 block. Then $\delta(\alpha)\ge3$.
+\end{lemma}
+
+\begin{proof}
+Let $L$ be an algebraic closure of $\F$ and $\lambda\in L$. For $\lambda=0$ the rank of
+$\alpha-\lambda$ is $n$.
+
+Let $\lambda=1$ and suppose $\rk(\alpha-1)\le2$. The fixed space $\ker(\alpha-1)$ has dimension at
+least $n-2\ge3$, so it is not contained in the image of $\alpha-1$. Take a fixed vector $v$ outside
+the image and $\varphi\in V^*$ with $\varphi(v)=1$ that vanishes on the image. Then
+$\varphi\circ\alpha=\varphi$, and $(v,\varphi)$ is a J1 block, a contradiction.
+
+Let $\lambda\notin\{0,1\}$ and let $E_\mu\subseteq L^n$ be the $\mu$-eigenspace of $\alpha$. Since
+the entries of $\alpha$ lie in $\F$, squaring every coordinate maps $E_\lambda$ into
+$E_{\lambda^2}$. This map is injective and semilinear with respect to the Frobenius automorphism
+of $L$, so $\dim E_\lambda\le\dim E_{\lambda^2}$. As $\lambda^2\ne\lambda$, the two eigenspaces
+intersect in $0$, so $2\dim E_\lambda\le n$ and
+$\rk(\alpha-\lambda)\ge n-\lfloor n/2\rfloor\ge3$.
+\end{proof}
+
+\begin{lemma}\label{lem:classN}
+Let $n\ge3$ and let $r\in\F[x]$ be irreducible of degree $n-1$. If $u\in\GL_n(\F)$ has minimal
+polynomial divisible by $r$, then its minimal and characteristic polynomials both equal
+$r\cdot(x+1)$. In particular any two such matrices are similar.
+\end{lemma}
+
+\begin{proof}
+The characteristic polynomial $\chi_u$ is divisible by $r$, so $\chi_u=r\,s$ with $s$ monic of
+degree $1$. Since $\det u\ne0$, $s(0)\ne0$, so $s=x+1$. The minimal polynomial is $r$ or
+$r(x+1)$. Since $1$ is a root of $\chi_u$, it is an eigenvalue of $u$ and a root of the minimal
+polynomial, while $r$, irreducible of degree at least $2$, has no root in $\F$. So the minimal
+polynomial is $r(x+1)=\chi_u$, and $u$ is similar to the companion matrix of $r(x+1)$.
+\end{proof}
+
+\begin{proposition}\label{prop:cyclic}
+Assume Theorems A and B. Let $n\ge5$, let $\alpha\in\GL_n(\F)$, $\alpha\ne1$, have no J1 block, and
+let $k=\lceil(n-1)/3\rceil$. Then every $g\ne1$ lies in $C_\alpha^{2k+1}$.
+\end{proposition}
+
+\begin{proof}
+Write $C=C_\alpha$. By Lemma~\ref{lem:minrank}, $k$ copies of $C$ have minimum ranks summing to at
+least $3k\ge n-1$, and $C$ is non-central. Theorem~A gives a cyclic matrix $D\in C^k$. Its inverse
+is cyclic too: if $v,Dv,\dots,D^{n-1}v$ is a basis, so is the sequence $D^{-j}(D^{n-1}v)$,
+$0\le j<n$.
+
+Let $r$ be the minimal polynomial over $\F$ of a primitive element of $\mathbb{F}_{2^{n-1}}$. It is
+monic and irreducible of degree $n-1\ge2$, and $r(0)\ne0$. The only homothety in $\GL_n(\F)$ is
+$1$, so $\alpha$ and $g$ are not homotheties.
+
+Theorem~B with $M=\alpha$ and $X$ the class of $D^{-1}$ gives $\alpha=d'x'$ with $x'$ similar to
+$D^{-1}$ and $r$ dividing the minimal polynomial of $d'$. Then $x'^{-1}$ is similar to $D$, so
+$x'^{-1}\in C^k$ and $d'=\alpha x'^{-1}\in C^{k+1}$.
+
+Theorem~B with $M=g$ and $X$ the class of $D$ gives $g=dx$ with $x$ similar to $D$, so $x\in
+C^k$, and $r$ dividing the minimal polynomial of $d$. By Lemma~\ref{lem:classN}, $d$ is similar to
+$d'$, so $d\in C^{k+1}$ and $g=dx\in C^{2k+1}$.
+\end{proof}
+
+\section{Proof of the theorems}\label{sec:proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:main}]
+We prove $P(n)$ for all $n\ge3$ by strong induction. The cases $n=3$ and $n=4$ are
+Section~\ref{sec:small}. Let $n\ge5$ and $\alpha\ne1$. If $\alpha$ has a J1 block,
+Proposition~\ref{prop:J1} (which uses $P(n-1)$ and $P(n-2)$, with $n-2\ge3$) gives
+$G\setminus\{1\}\subseteq C_\alpha^n$. Otherwise Proposition~\ref{prop:cyclic} gives
+$G\setminus\{1\}\subseteq C_\alpha^{2k+1}$ with $k=\lceil(n-1)/3\rceil$, and $2k+1\le n$ for
+$n\ge5$. In both cases Lemma~\ref{lem:more} gives $G\setminus\{1\}\subseteq C_\alpha^{k'}$ for
+every $k'\ge n$.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:far}]
+Combine Proposition~\ref{prop:cyclic} with Lemma~\ref{lem:more}.
+\end{proof}
+
+\begin{corollary}
+Assume Theorems A and B. For $n\ge3$ and $\alpha\in\GL_n(\F)$, $\alpha\ne1$, the identity is a
+product of $n+1$ conjugates of $\alpha$.
+\end{corollary}
+
+\begin{proof}
+By Theorem~\ref{thm:main}, $\alpha^{-1}=c_1\cdots c_n$ with $c_i\in C_\alpha$, so
+$1=c_1\cdots c_n\alpha$.
+\end{proof}
+
+For a single class repeated $n+1$ times, this is the $\F$ analogue of the statement that the
+extended covering number is at most $n+1$, which Kn\"uppel and Nielsen prove for arbitrary
+classes over fields that are not too small.
+
+\section{The formalization}\label{sec:lean}
+
+The Lean development accompanies this note. It consists of about 2300 lines of Lean together
+with generated certificate data, and builds against a pinned version of Mathlib. Its main
+theorem is
+\begin{verbatim}
+theorem Vaserstein.question :
+    KnuppelNielsen69 -> BungerNielsen12 -> Question (ZMod 2)
+\end{verbatim}
+together with \texttt{Vaserstein.questionFrom}, the version with $k\ge n$ factors.
+
+\emph{What is stated.} \texttt{Question F} is defined directly from the wording of Problem
+16.21, with \texttt{SpecialLinearGroup}, its centre, and similarity by an invertible matrix. It
+quantifies over all $n>2$ and all non-central $\alpha,\beta$. \texttt{KnuppelNielsen69} and
+\texttt{BungerNielsen12} are the statements of Theorems A and B for $\F$, with cyclicity and
+minimum rank defined as in Section 1. The minimum rank is defined through an algebraic closure,
+as in the formula of Kn\"uppel and Nielsen.
+
+\emph{What is proved.} Everything else in this note, including the cases $n=3,4$, which are
+proved with no hypotheses. Their certificates, about $20{,}000$ conjugating matrices for $n=4$,
+are checked with \texttt{decide +kernel}, so the check runs in Lean's kernel and not in compiled
+code. The development uses no \texttt{sorry}, no \texttt{native\_decide} and no axioms beyond
+Lean's standard \texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}.
+
+\emph{What must be trusted.} Lean's kernel and Mathlib; the published proofs of Theorems A and
+B; and the transcription of those two theorems into Lean, which was compared by hand with the
+statements in the papers. An error in the transcription would make the Lean theorem a statement
+about slightly different hypotheses, so this is the step a careful reader should check. The
+exact numbers of Table~\ref{tab:cn} come from a separate computation and are not formalized.
+
+\section{Discussion and open questions}\label{sec:discussion}
+
+\begin{question}
+Can Theorems A and B be formalized, so that the answer for $\F$ becomes unconditional? Theorem~B
+concerns a single field and an explicit construction and seems the more accessible of the two.
+\end{question}
+
+\begin{question}
+Does the same argument work over other small fields? The reduction for matrices with a J1 block
+uses $\F$ in several places, for instance the test for linear independence by sums of subsets,
+the identity $3u=u$ in Lemma~\ref{lem:P}, and the structure of $\GL_2(\F)$ in
+Lemma~\ref{lem:exception}.
+\end{question}
+
+\begin{question}
+What is $\cn(\alpha)$ for general $n$? Table~\ref{tab:cn} and Theorem~\ref{thm:far} suggest that
+$\cn(\alpha)$ is much smaller than $n$ unless $\alpha$ is close to the identity or to a sum of
+order-$3$ rotations. Is $\cn(\alpha)$ bounded by a constant for cyclic $\alpha$, as Lev's results
+give, under conditions on the eigenvalues, for larger fields?
+\end{question}
+
+\begin{question}
+Can the special cases used here be proved directly? Only the case of Theorem~A with all classes
+equal is used, and Theorem~B is used for a single polynomial $q$ in each dimension.
+\end{question}
+
+\subsection*{Use of AI}
+As described in Section 1, this work was produced almost entirely by an AI agent (Droid, by
+Factory) under the author's direction, while testing a new computational mathematics project. The
+agent carried out the computations, found the argument, searched the literature, wrote the Lean
+formalization and drafted this text; the author chose the problem, set the scope and takes
+responsibility for the paper. The Lean check covers every step except Theorems A and B, but it
+does not cover the exposition, the literature survey or the claims about prior work, which have
+not been reviewed by a specialist. Corrections are welcome.
+
+\begin{thebibliography}{9}
+
+\bibitem{AH}
+Z.~Arad and M.~Herzog (eds.),
+\emph{Products of Conjugacy Classes in Groups},
+Lecture Notes in Math. \textbf{1112}, Springer, 1985.
+
+\bibitem{BN}
+F.~B\"unger and K.~Nielsen,
+\emph{A matrix-decomposition theorem for $\mathrm{GL}_n(K)$},
+Linear Algebra Appl. \textbf{298} (1999), 39--50,
+\href{https://doi.org/10.1016/S0024-3795(99)00138-X}{doi:10.1016/S0024-3795(99)00138-X}.
+
+\bibitem{Knuppel}
+F.~Kn\"uppel,
+\emph{Products of similar matrices},
+Linear Algebra Appl. \textbf{233} (1996), 99--108.
+
+\bibitem{KN}
+F.~Kn\"uppel and K.~Nielsen,
+\emph{The extended covering number of $\mathrm{SL}_n$ is $n+1$},
+Linear Algebra Appl. \textbf{418} (2006), 634--656,
+\href{https://doi.org/10.1016/j.laa.2006.03.011}{doi:10.1016/j.laa.2006.03.011}.
+
+\bibitem{Kourovka}
+E.~I.~Khukhro and V.~D.~Mazurov (eds.),
+\emph{Unsolved Problems in Group Theory. The Kourovka Notebook}, No.~21, 2026,
+\href{https://arxiv.org/abs/1401.0300}{arXiv:1401.0300}.
+
+\bibitem{Lev}
+A.~Lev,
+\emph{Products of cyclic similarity classes in the groups $\mathrm{GL}_n(F)$},
+Linear Algebra Appl. \textbf{202} (1994), 235--266.
+
+\bibitem{Lean4}
+L.~de~Moura and S.~Ullrich,
+\emph{The Lean 4 theorem prover and programming language},
+in: Automated Deduction, CADE 28, Lecture Notes in Comput. Sci. \textbf{12699}, Springer, 2021,
+625--635.
+
+\bibitem{Mathlib}
+The mathlib Community,
+\emph{The Lean mathematical library},
+in: Proceedings of the 9th ACM SIGPLAN International Conference on Certified Programs and
+Proofs (CPP 2020), 367--381.
+
+\end{thebibliography}
+
+\end{document}
