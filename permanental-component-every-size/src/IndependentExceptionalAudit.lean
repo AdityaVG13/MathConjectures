@@ -1,0 +1,97 @@
+import ExceptionalCofactorDerivative
+import ExceptionalCriticalFamily
+import ExceptionalDiagonalCurve
+import ExceptionalExpansion
+import ExceptionalHessian
+import ExceptionalSignSymmetries
+import ExceptionalSmoothJacobian
+import ExceptionalStationaryJacobian
+import ExceptionalTangentCharacters
+set_option pp.universes true
+set_option pp.explicit true
+#check @ExceptionalCofactorDerivative.permanent_derivative_zero
+#print axioms ExceptionalCofactorDerivative.permanent_derivative_zero
+#check @ExceptionalCofactorDerivative.permanent_derivative_single
+#print axioms ExceptionalCofactorDerivative.permanent_derivative_single
+#check @ExceptionalCriticalFamily.cofactor_formula
+#print axioms ExceptionalCriticalFamily.cofactor_formula
+#check @ExceptionalCriticalFamily.zero_relation_critical
+#print axioms ExceptionalCriticalFamily.zero_relation_critical
+#check @ExceptionalCriticalFamily.cleared_basepoint
+#print axioms ExceptionalCriticalFamily.cleared_basepoint
+#check @ExceptionalDiagonalCurve.curve_matrix_formula
+#print axioms ExceptionalDiagonalCurve.curve_matrix_formula
+#check @ExceptionalDiagonalCurve.potential_identity
+#print axioms ExceptionalDiagonalCurve.potential_identity
+#check @ExceptionalDiagonalCurve.stationary_order_four
+#print axioms ExceptionalDiagonalCurve.stationary_order_four
+#check @ExceptionalExpansion.permanent_succ_column_zero
+#print axioms ExceptionalExpansion.permanent_succ_column_zero
+#check @ExceptionalExpansion.permanent_expand_column
+#print axioms ExceptionalExpansion.permanent_expand_column
+#check @ExceptionalExpansion.permanent_eq_zero_of_cofactors
+#print axioms ExceptionalExpansion.permanent_eq_zero_of_cofactors
+#check @ExceptionalHessian.entry_derivative
+#print axioms ExceptionalHessian.entry_derivative
+#check @ExceptionalHessian.potential_gradient
+#print axioms ExceptionalHessian.potential_gradient
+#check @ExceptionalHessian.factor_value
+#print axioms ExceptionalHessian.factor_value
+#check @ExceptionalHessian.cofactor_value
+#print axioms ExceptionalHessian.cofactor_value
+#check @ExceptionalHessian.firstVector_eq
+#print axioms ExceptionalHessian.firstVector_eq
+#check @ExceptionalHessian.hessian_eq_stationary
+#print axioms ExceptionalHessian.hessian_eq_stationary
+#check @ExceptionalHessian.hessian_rank
+#print axioms ExceptionalHessian.hessian_rank
+#check @ExceptionalSignSymmetries.negateColumn_permanent
+#print axioms ExceptionalSignSymmetries.negateColumn_permanent
+#check @ExceptionalSignSymmetries.negateRow_permanent
+#print axioms ExceptionalSignSymmetries.negateRow_permanent
+#check @ExceptionalSignSymmetries.actionA_permanent
+#print axioms ExceptionalSignSymmetries.actionA_permanent
+#check @ExceptionalSignSymmetries.actionD_permanent
+#print axioms ExceptionalSignSymmetries.actionD_permanent
+#check @ExceptionalSignSymmetries.actionQ_permanent
+#print axioms ExceptionalSignSymmetries.actionQ_permanent
+#check @ExceptionalSignSymmetries.actionA_involutive
+#print axioms ExceptionalSignSymmetries.actionA_involutive
+#check @ExceptionalSignSymmetries.actionD_involutive
+#print axioms ExceptionalSignSymmetries.actionD_involutive
+#check @ExceptionalSignSymmetries.actionQ_involutive
+#print axioms ExceptionalSignSymmetries.actionQ_involutive
+#check @ExceptionalSignSymmetries.actions_commute
+#print axioms ExceptionalSignSymmetries.actions_commute
+#check @ExceptionalSignSymmetries.actions_fix_base
+#print axioms ExceptionalSignSymmetries.actions_fix_base
+#check @ExceptionalSmoothJacobian.constraints_are_permanents
+#print axioms ExceptionalSmoothJacobian.constraints_are_permanents
+#check @ExceptionalSmoothJacobian.jacobian_formula
+#print axioms ExceptionalSmoothJacobian.jacobian_formula
+#check @ExceptionalSmoothJacobian.jacobian_determinant
+#print axioms ExceptionalSmoothJacobian.jacobian_determinant
+#check @ExceptionalSmoothJacobian.relation_value
+#print axioms ExceptionalSmoothJacobian.relation_value
+#check @ExceptionalSmoothJacobian.relation_partial_j
+#print axioms ExceptionalSmoothJacobian.relation_partial_j
+#check @ExceptionalStationaryJacobian.actual_vector
+#print axioms ExceptionalStationaryJacobian.actual_vector
+#check @ExceptionalStationaryJacobian.actual_matrix
+#print axioms ExceptionalStationaryJacobian.actual_matrix
+#check @ExceptionalStationaryJacobian.scaled_inverse
+#print axioms ExceptionalStationaryJacobian.scaled_inverse
+#check @ExceptionalStationaryJacobian.actual_inverse
+#print axioms ExceptionalStationaryJacobian.actual_inverse
+#check @ExceptionalStationaryJacobian.actual_rank
+#print axioms ExceptionalStationaryJacobian.actual_rank
+#check @ExceptionalTangentCharacters.projection_basis
+#print axioms ExceptionalTangentCharacters.projection_basis
+#check @ExceptionalTangentCharacters.projection_kills_torus
+#print axioms ExceptionalTangentCharacters.projection_kills_torus
+#check @ExceptionalTangentCharacters.actionA_character
+#print axioms ExceptionalTangentCharacters.actionA_character
+#check @ExceptionalTangentCharacters.actionD_character_mod_torus
+#print axioms ExceptionalTangentCharacters.actionD_character_mod_torus
+#check @ExceptionalTangentCharacters.actionQ_character_mod_torus
+#print axioms ExceptionalTangentCharacters.actionQ_character_mod_torus
