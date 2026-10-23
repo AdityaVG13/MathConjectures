@@ -4,7 +4,7 @@ import PermanentPartition.FiveByFive
 /-!
 # Conjecture 4.27 of Boralevi, Carlini, Michałek and Ventura is false
 
-L. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
+A. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
 Adv. Math. 461 (2025) 110079, arXiv:2402.17839, conjecture that for the generic `k × k` matrix
 
   `rad(I(Sing(P))) = ⋂_{(S₁, S₂) ∈ Π} rad(J_{S₁} + J_{S₂})`.

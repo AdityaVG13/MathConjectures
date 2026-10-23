@@ -159,7 +159,7 @@ scheme.
   the nondegenerate `3 × 4` component, coordinate normalizations and block-type prime constructions,
   and classify the minimal primes of the `3 × 3` permanents of a `4 × 4` matrix. These are the
   ancestry of the construction here; they do not give the all-size family or its dimension.
-- L. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
+- A. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental varieties*,
   Advances in Mathematics 461 (2025) 110079, [arXiv:2402.17839](https://arxiv.org/abs/2402.17839).
   Definition 3.13 and Proposition 3.14 record the nondegenerate `3 × 4` variety as irreducible, of
   codimension four (affine dimension eight) and degree 66. The paper works with reduced varieties,

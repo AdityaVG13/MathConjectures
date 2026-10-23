@@ -7,7 +7,7 @@ import Mathlib.RingTheory.Ideal.Operations
 /-!
 # The statement of Conjecture 4.27
 
-Reference: L. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental
+Reference: A. Boralevi, E. Carlini, M. Michałek, E. Ventura, *On the codimension of permanental
 varieties*, Adv. Math. 461 (2025) 110079, arXiv:2402.17839, Section 4.5.
 
 Let `M = (x_ij)` be the generic `k × k` matrix over the polynomial ring `ℂ[x_ij]` in `k²`
